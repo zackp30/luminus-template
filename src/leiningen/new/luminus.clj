@@ -32,11 +32,9 @@
    ;;HTML templates
    ["resources/templates/base.html" "core/resources/templates/base.html"]
    ["resources/templates/home.html" "core/resources/templates/home.html"]
-   ["resources/templates/about.html" "core/resources/templates/about.html"]
 
-   ;; public resources, example URL: /css/screen.css
-   ["resources/public/css/screen.css" "core/resources/css/screen.css"]
-   ["resources/docs/docs.md" "core/resources/docs.md"]
+   ;; public resources, example URL: /css/all.css
+   ["resources/public/css/screen.css" "core/resources/css/all.css"]
    "resources/public/js"
    "resources/public/img"
 

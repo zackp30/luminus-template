@@ -15,30 +15,18 @@
          [:ul.nav.navbar-nav
           [:li {:class (when (= :home (session/get :page)) "active")}
            [:a {:on-click #(secretary/dispatch! "#/")} "Home"]]
-          [:li {:class (when (= :about (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]]])
-
-(defn about-page []
-  [:div "this is the story of <<name>>... work in progress"])
-
-(defn home-page []
-  [:div
-   [:h2 "Welcome to ClojureScript"]])
+           [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]])
 
 (def pages
-  {:home home-page
-   :about about-page})
+  {:home home-page})
 
 (defn page []
   [(pages (session/get :page))])
 
 (defroute "/" [] (session/put! :page :home))
-(defroute "/about" [] (session/put! :page :about))
 
 (defn init! []
   (secretary/set-config! :prefix "#")
   (session/put! :page :home)
   (reagent/render-component [navbar] (.getElementById js/document "navbar"))
   (reagent/render-component [page] (.getElementById js/document "app")))
-
-

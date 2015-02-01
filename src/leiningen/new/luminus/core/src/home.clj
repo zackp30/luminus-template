@@ -5,8 +5,7 @@
 
 (defn home-page []
   (layout/render
-    "home.html" {:docs (-> "docs/docs.md" io/resource slurp)}))
+    "home.html"))
 
 (defroutes home-routes
-  (GET "/" [] (home-page))
-  (GET "/about" [] (about-page)))
+  (GET "/" [] (home-page)))
