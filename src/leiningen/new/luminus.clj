@@ -8,6 +8,7 @@
             [clojure.string :as s]
             [clojure.java.io :as io]
             [leiningen.new.common :refer :all]
+            [leiningen.new.auth :refer [auth-features]]
             [leiningen.new.db :refer [db-features]]
             [leiningen.new.cljs :refer [cljs-features]]
             [leiningen.new.cucumber :refer [cucumber-features]]
@@ -60,8 +61,8 @@
   (with-redefs [leiningen.new.templates/render-text render-template]
     (let [[assets options]
           (-> [core-assets options]
+              auth-features
               db-features
-
               cucumber-features
               site-features
               cljs-features
@@ -76,7 +77,7 @@
   [name & feature-params]
   (let [supported-features #{"+cljs" "+site" "+h2" "+postgres"
                              "+dailycred" "+mysql" "+http-kit"
-                             "+cucumber" "+mongodb"}
+                             "+cucumber" "+mongodb" "+auth"}
         options {:name       (project-name name)
                  :selmer-renderer render-template
                  :min-lein-version "2.0.0"
