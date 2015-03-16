@@ -19,13 +19,13 @@ lein new luminus <your project name>
 
 However, if you would like to attach further functionality to your template you can append [profile hints][ph] for these extended features:
 
+* `+auth` adds [Buddy](https://funcool.github.io/buddy/latest/) dependency and authentication middleware
 * `+cljs` adds [ClojureScript][cljs] support to the project along with an example
 * `+h2` adds db.core namespace and [H2 database][h2] dependencies
 * `+postgres` adds db.core namespace and add [PostreSQL database][pg] dependencies
 * `+mysql` adds db.core namespace and add [MySQL/MariaDB database][my] dependencies
-* `+site` registration/authentication, uses `+h2` by default
-* `+dailycred` combined with `+site` it uses [DailyCred][dc] to authenticate
-* `+http-kit` adds the fast [HTTP Kit][kit] web server to the project
+* `+http-kit` adds the fast [HTTP Kit](http://www.http-kit.org/) web server to the project
+* `+immutant` adds the [Immutant](http://immutant.org/) web server to the project
 * `+cucumber` adds support for browser based UI testing with [Cucumber][cucumber] and [clj-webdriver][clj-webdriver]
 * `+mongodb` adds support for [MongoDB][mongo] using the [Monger][monger] library
 
@@ -38,7 +38,7 @@ lein new luminus myapp +cljs
 You can also mix multiple profiles when creating the application, e.g.:
 
 ```bash
-lein new luminus myapp +site +postgres
+lein new luminus myapp +auth +postgres
 ```
 
 To build as a executable [Java ARchive (JAR)][jar] standalone, run the following command:

@@ -8,16 +8,15 @@
    ["env/prod/cljs/<<sanitized>>/prod.cljs" "cljs/env/prod/cljs/app.cljs"]
    ["resources/templates/home.html" "cljs/templates/home.html"]])
 
-(defn remove-conflicting-assets [assets]
-  (remove #(and (coll? %)
-                (.endsWith (second %) ".html")) assets))
-
 (def cljs-dependencies
-  [['org.clojure/clojurescript "0.0-2850" :scope "provided"]
-   ['reagent-forms "0.4.3"]
-   ['reagent-utils "0.1.2"]
+  [['org.clojure/clojurescript "0.0-3058" :scope "provided"]
+   ['reagent-forms "0.4.4"]
+   ['reagent-utils "0.1.3"]
    ['secretary "1.2.1"]
+   ['org.clojure/core.async "0.1.346.0-17112a-alpha"]
    ['cljs-ajax "0.3.10"]])
+
+(def clean-targets ["resources/public/js"])
 
 (def cljs-dev-dependencies
   [['leiningen "2.5.1"]
@@ -54,13 +53,14 @@
 
 (defn cljs-features [[assets options :as state]]
   (if (some #{"+cljs"} (:features options))
-    [(into (remove-conflicting-assets assets) cljs-assets)
+    [(into (remove-conflicting-assets assets ".html") cljs-assets)
      (-> options
          (append-options :dependencies cljs-dependencies)
          (append-options :dev-dependencies cljs-dev-dependencies)
          (append-options :plugins [['lein-cljsbuild "1.0.4"]])
          (append-options :dev-plugins [['lein-figwheel "0.2.3-SNAPSHOT"]])
          (append-options :dev-source-paths ["env/dev/clj"])
+         (update-in [:clean-targets] (fnil into []) clean-targets)
          (assoc
            :cljs-build (indent root-indent cljs-build)
            :figwheel (indent dev-indent (figwheel options))

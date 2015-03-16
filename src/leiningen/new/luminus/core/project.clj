@@ -5,10 +5,10 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [ring-server "0.3.1"]
-                 [selmer "0.8.0"]
+                 [selmer "0.8.2"]
                  [com.taoensso/timbre "3.3.1"]
                  [com.taoensso/tower "3.0.2"]
-                 [markdown-clj "0.9.63"]
+                 [markdown-clj "0.9.64"]
                  [environ "1.0.0"]
                  [im.chit/cronj "1.4.3"]
                  [compojure "1.3.2"]
@@ -16,7 +16,6 @@
                  [ring/ring-session-timeout "0.1.0"]
                  [ring-middleware-format "0.4.0"]
                  [noir-exception "0.2.3"]
-                 [crypto-password "0.1.3"]
                  [bouncer "0.3.2"]
                  [prone "0.8.0"]
                  <<dependencies>>]
@@ -26,9 +25,7 @@
   :repl-options {:init-ns <<name>>.handler}
   :jvm-opts ["-server"]
 
-  <% if main %>
-  :main <<main>>
-  <% endif %>
+  :main <<project-ns>>.core
 
   :plugins [[lein-ring "0.9.1"]
             [lein-environ "1.0.0"]
@@ -46,7 +43,9 @@
   :ragtime
   <<migrations>>
   <% endif %>
-
+  <% if clean-targets %>
+  :clean-targets ^{:protect false} <<clean-targets>>
+  <% endif %>
   <% if cljs-build %>
   :cljsbuild
   <<cljs-build>>
