@@ -30,6 +30,7 @@
    ["src/<<sanitized>>/layout.clj" "core/src/layout.clj"]
    ["src/<<sanitized>>/middleware.clj" "core/src/middleware.clj"]
    ["src/<<sanitized>>/session.clj" "core/src/session.clj"]
+   ["env/dev/clj/<<sanitized>>/repl.clj" "core/env/repl.clj"]
 
 
    ;;HTML templates
@@ -59,7 +60,7 @@
 (defn generate-project
   "Create a new Luminus project"
   [options]
-  (main/info "Generating a Leiningen project.")
+  (main/info "Generating a Luminus project.")
   (with-redefs [leiningen.new.templates/render-text render-template]
     (let [[assets options]
           (-> [core-assets options]
@@ -87,6 +88,7 @@
                  :project-ns (sanitize-ns name)
                  :sanitized  (name-to-path name)
                  :year       (year)
+                 :dev-source-paths ["env/dev/clj"]
                  :features   (set feature-params)}
         unsupported (-> (set feature-params)
                         (clojure.set/difference supported-features)
