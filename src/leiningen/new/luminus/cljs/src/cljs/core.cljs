@@ -14,7 +14,6 @@
 (defn page []
   [(pages (session/get :page))])
 
-(defroute "/" [] (session/put! :page :home))
 ;; -------------------------
 ;; Routes
 (secretary/set-config! :prefix "#")
