@@ -8,6 +8,9 @@
             [ajax.core :refer [GET POST]])
   (:import goog.History))
 
+(defn home-page []
+  [:p "-"])
+
 (def pages
   {:home home-page})
 
@@ -42,7 +45,6 @@
   (reagent/render-component [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (fetch-docs!)
   (hook-browser-navigation!)
   (session/put! :page :home)
   (reagent/render-component [page] (.getElementById js/document "app"))
