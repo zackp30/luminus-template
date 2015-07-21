@@ -4,11 +4,12 @@
     [clojure.pprint :refer [code-dispatch pprint with-pprint-dispatch]]))
 
 (def dependency-indent 17)
-(def dev-dependency-indent 24)
+(def dev-dependency-indent 33)
 (def plugin-indent 12)
 (def root-indent 2)
-(def dev-indent 9)
+(def dev-indent 18)
 (def uberjar-indent 13)
+(def require-indent 13)
 
 (def render (renderer "luminus"))
 
@@ -64,3 +65,11 @@
   (remove #(and (coll? %)
                 (.endsWith (second %) filter-str))
           assets))
+
+(defn unsupported-jetty-java-version? [java-version]
+  (as-> java-version %
+        (clojure.string/split % #"\.")
+        (take 2 %)
+        (map #(Integer/parseInt %) %)
+        (and (< (first %) 2)
+             (< (second %) 8))))

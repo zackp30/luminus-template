@@ -5,21 +5,25 @@
             [leinjacker.utils :refer [lein-generation]]
             [selmer.parser :as selmer]
             [leiningen.core.main :as main]
-            [clojure.string :as s]
-            [clojure.java.io :as io]
             [leiningen.new.common :refer :all]
             [leiningen.new.auth :refer [auth-features]]
             [leiningen.new.db :refer [db-features]]
             [leiningen.new.cljs :refer [cljs-features]]
             [leiningen.new.cucumber :refer [cucumber-features]]
+            [leiningen.new.aleph :refer [aleph-features]]
+            [leiningen.new.jetty :refer [jetty-features]]
             [leiningen.new.http-kit :refer [http-kit-features]]
             [leiningen.new.immutant :refer [immutant-features]]
-            [leiningen.new.site :refer [site-features]])
+            [leiningen.new.swagger :refer [swagger-features]]
+            [leiningen.new.sassc :refer [sassc-features]]
+            [leiningen.new.site :refer [site-features]]
+            [leiningen.new.war :refer [war-features]])
   (:import java.io.File))
 
 (def core-assets
   [[".gitignore" "core/gitignore"]
    ["project.clj" "core/project.clj"]
+   ["profiles.clj" "core/profiles.clj"]
    ["Procfile" "core/Procfile"]
    ["README.md" "core/README.md"]
 
@@ -30,12 +34,12 @@
    ["src/<<sanitized>>/layout.clj" "core/src/layout.clj"]
    ["src/<<sanitized>>/middleware.clj" "core/src/middleware.clj"]
    ["src/<<sanitized>>/session.clj" "core/src/session.clj"]
-   ["env/dev/clj/<<sanitized>>/repl.clj" "core/env/repl.clj"]
-
 
    ;;HTML templates
    ["resources/templates/base.html" "core/resources/templates/base.html"]
    ["resources/templates/home.html" "core/resources/templates/home.html"]
+   ["resources/templates/about.html" "core/resources/templates/about.html"]
+   ["resources/templates/error.html" "core/resources/templates/error.html"]
 
    ;; public resources, example URL: /css/all.css
    ["resources/public/css/screen.css" "core/resources/css/all.css"]
@@ -47,9 +51,9 @@
 
 (defn render-template [template options]
   (selmer/render
-    (str "<% safe %>" template "<% endsafe %>")
-    options
-    {:tag-open \< :tag-close \> :filter-open \< :filter-close \>}))
+   (str "<% safe %>" template "<% endsafe %>")
+   options
+   {:tag-open \< :tag-close \> :filter-open \< :filter-close \>}))
 
 (defn format-options [options]
   (-> options
@@ -69,27 +73,44 @@
               cucumber-features
               site-features
               cljs-features
+              swagger-features
+              aleph-features
+              jetty-features
               http-kit-features
-              immutant-features)]
+              immutant-features
+              sassc-features
+              war-features)]
       (render-assets assets (format-options options)))))
 
 (defn format-features [features]
   (apply str (interpose ", " features)))
 
+(defn set-default-features [options]
+  (if (empty?
+       (clojure.set/intersection
+        (-> options :features set)
+        #{"+jetty" "+aleph" "+http-kit"}))
+    (update-in options [:features] conj "+immutant")
+    options))
+
 (defn luminus
   "Create a new Luminus project"
   [name & feature-params]
-  (let [supported-features #{"+cljs" "+site" "+h2" "+postgres"
-                             "+dailycred" "+mysql" "+http-kit"
-                             "+cucumber" "+mongodb" "+auth" "+immutant"}
-        options {:name       (project-name name)
-                 :selmer-renderer render-template
+  (let [supported-features #{;;databases
+                             "+h2" "+postgres" "+mysql" "+mongodb"
+                             ;;servers
+                             "+aleph" "+jetty" "+http-kit"
+                             ;;misc
+                             "+cljs" "+auth" "+site"
+                             "+cucumber" "+dailycred"
+                             "+sassc" "+swagger" "+war"}
+        options {:name             (project-name name)
+                 :selmer-renderer  render-template
                  :min-lein-version "2.0.0"
-                 :project-ns (sanitize-ns name)
-                 :sanitized  (name-to-path name)
-                 :year       (year)
-                 :dev-source-paths ["env/dev/clj"]
-                 :features   (set feature-params)}
+                 :project-ns       (sanitize-ns name)
+                 :sanitized        (name-to-path name)
+                 :year             (year)
+                 :features         (set feature-params)}
         unsupported (-> (set feature-params)
                         (clojure.set/difference supported-features)
                         (not-empty))]
@@ -99,14 +120,14 @@
 
       (re-matches #"\A\+.+" name)
       (main/info "Project name is missing.\nTry: lein new luminus PROJECT_NAME"
-               name (clojure.string/join " " (:features options)))
+                 name (clojure.string/join " " (:features options)))
 
       unsupported
       (main/info "Unrecognized options:" (format-features unsupported)
-               "\nSupported options are:" (format-features supported-features))
+                 "\nSupported options are:" (format-features supported-features))
 
       (.exists (File. name))
       (main/info "Could not create project because a directory named" name "already exists!")
 
       :else
-      (generate-project options))))
+      (-> options set-default-features generate-project))))

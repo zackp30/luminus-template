@@ -3,7 +3,8 @@
 
 (defn http-kit-features [[assets options :as state]]
   (if (some #{"+http-kit"} (:features options))
-    [(into (remove-conflicting-assets assets "core.clj")
-           [["src/<<sanitized>>/core.clj" "httpkit/core.clj"]])
-     (append-options options :dependencies [['http-kit "2.1.19"]])]
+    [assets
+     (-> options
+         (assoc :server "http-kit")
+         (append-options :dependencies [['http-kit "2.1.19"]]))]
     state))

@@ -3,72 +3,66 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [ring-server "0.4.0"]
-                 [selmer "0.8.2"]
-                 [com.taoensso/timbre "3.4.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [selmer "0.8.5"]
+                 [com.taoensso/timbre "4.0.2"]
                  [com.taoensso/tower "3.0.2"]
-                 [markdown-clj "0.9.65"]
+                 [markdown-clj "0.9.67"]
                  [environ "1.0.0"]
-                 [im.chit/cronj "1.4.3"]
-                 [compojure "1.3.2"]
-                 [ring/ring-defaults "0.1.4"]
+                 [compojure "1.4.0"]
+                 [ring/ring-defaults "0.1.5"]
                  [ring/ring-session-timeout "0.1.0"]
-                 [ring-middleware-format "0.4.0"]
-                 [noir-exception "0.2.3"]
-                 [bouncer "0.3.2"]
-                 [prone "0.8.1"]
+                 [ring "1.4.0"
+                  :exclusions [ring/ring-jetty-adapter]]
+                 [metosin/ring-middleware-format "0.6.0"]
+                 [metosin/ring-http-response "0.6.3"]
+                 [bouncer "0.3.3"]
+                 [prone "0.8.2"]
+                 [org.clojure/tools.nrepl "0.2.10"]
                  <<dependencies>>]
 
   :min-lein-version "<<min-lein-version>>"
   :uberjar-name "<<name>>.jar"
-  :repl-options {:init-ns <<name>>.handler}
   :jvm-opts ["-server"]
 
-  :main <<project-ns>>.core
+  :main <<project-ns>>.core<% if migrations %>
+  :migratus <<migrations>><% endif %>
 
-  :plugins [[lein-ring "0.9.1"]
-            [lein-environ "1.0.0"]
-            [lein-ancient "0.6.5"]
-            <<plugins>>]
-  <% if cucumber-feature-paths %>
-  :cucumber-feature-paths <<cucumber-feature-paths>>
-  <% endif %>
-
-  :ring {:handler <<name>>.handler/app
-         :init    <<name>>.handler/init
-         :destroy <<name>>.handler/destroy
-         :uberwar-name "<<name>>.war"}
-  <% if migrations %>
-  :ragtime
-  <<migrations>>
-  <% endif %>
-  <% if clean-targets %>
-  :clean-targets ^{:protect false} <<clean-targets>>
-  <% endif %>
-  <% if cljs-build %>
+  :plugins [[lein-environ "1.0.0"]
+            [lein-ancient "0.6.5"]<% if plugins %>
+            <<plugins>><% endif %>]<% if cucumber-feature-paths %>
+  :cucumber-feature-paths <<cucumber-feature-paths>><% endif %><% if sassc-config-params %>
+  :sassc <<sassc-config-params>>
+  :hooks [leiningen.sassc]<% endif %><% if ring-options %>
+  :ring
+  <<ring-options>><% endif %><% if clean-targets %>
+  :clean-targets ^{:protect false} <<clean-targets>><% endif %><% if cljs-build %>
   :cljsbuild
-  <<cljs-build>>
-  <% endif %>
+  <<cljs-build>><% endif %>
   :profiles
   {:uberjar {:omit-source true
-             :env {:production true}
-            <<cljs-uberjar>>
+             :env {:production true}<% if cljs-uberjar %>
+             <<cljs-uberjar>><% endif %>
              :aot :all}
-   :dev {:dependencies [[ring-mock "0.1.5"]
-                        [ring/ring-devel "1.3.2"]
-                        [pjstadig/humane-test-output "0.7.0"]
-                        <<dev-dependencies>>]
-         :source-paths <<dev-source-paths>>
-         <% if dev-plugins %>
-         :plugins <<dev-plugins>>
-         <% endif %>
-        <<cljs-dev>>
-         <% if figwheel %>
-         :figwheel
-         <<figwheel>>
-         <% endif %>
-         :repl-options {:init-ns <<project-ns>>.repl}
-         :injections [(require 'pjstadig.humane-test-output)
-                      (pjstadig.humane-test-output/activate!)]
-         :env {:dev true}}})
+   :dev           [:project/dev :profiles/dev]
+   :test          [:project/test :profiles/test]
+   :project/dev  {:dependencies [[ring/ring-mock "0.2.0"]
+                                 [ring/ring-devel "1.4.0"]
+                                 [pjstadig/humane-test-output "0.7.0"]<% if dev-dependencies %>
+                                 <<dev-dependencies>><% endif %>]
+                  <% if dev-plugins %>:plugins <<dev-plugins>><% endif %><% if cljs-dev %>
+                  <<cljs-dev>><% endif %>
+                  <% if figwheel %>:figwheel
+                  <<figwheel>><% endif %>
+                  :repl-options {:init-ns <<project-ns>>.core}
+                  :injections [(require 'pjstadig.humane-test-output)
+                               (pjstadig.humane-test-output/activate!)]
+                  ;;when :nrepl-port is set the application starts the nREPL server on load
+                  :env {:dev        true
+                        :port       3000
+                        :nrepl-port 7000}}
+   :project/test {:env {:test       true
+                        :port       3001
+                        :nrepl-port 7001}}
+   :profiles/dev {}
+   :profiles/test {}})
