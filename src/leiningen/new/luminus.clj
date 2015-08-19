@@ -46,12 +46,6 @@
    ;; tests
    ["test/<<sanitized>>/test/handler.clj" "core/test/handler.clj"]])
 
-(defn render-template [template options]
-  (selmer/render
-   (str "<% safe %>" template "<% endsafe %>")
-   options
-   {:tag-open \< :tag-close \> :filter-open \< :filter-close \>}))
-
 (defn format-options [options]
   (-> options
       (update-in [:dependencies] (partial indent dependency-indent))
