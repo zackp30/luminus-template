@@ -2,11 +2,11 @@
   (:require [leiningen.new.common :refer :all]))
 
 (def swagger-assets
-  [["src/<<sanitized>>/routes/services.clj" "swagger/src/services.clj"]])
+  [["src/{{sanitized}}/routes/services.clj" "swagger/src/services.clj"]])
 
 (def swagger-dependencies
-  [['metosin/compojure-api "0.22.0"]
-   ['metosin/ring-swagger-ui "2.1.1-M2"]])
+  [['metosin/compojure-api "0.22.1"]
+   ['metosin/ring-swagger-ui "2.1.1"]])
 
 (defn swagger-features [[assets options :as state]]
   (if (some #{"+swagger"} (:features options))

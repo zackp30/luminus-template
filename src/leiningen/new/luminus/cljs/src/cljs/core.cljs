@@ -40,9 +40,12 @@
 
 ;; -------------------------
 ;; Initialize app
+(defn fetch-docs! []
+  (GET "/docs" {:handler #(session/put! :docs %)}))
 
 (defn mount-components []
-  (reagent/render-component [#'page] (.getElementById js/document "app")))
+  (reagent/render [#'navbar] (.getElementById js/document "navbar"))
+  (reagent/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
   (hook-browser-navigation!)

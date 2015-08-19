@@ -2,23 +2,26 @@
   (:require [leiningen.new.common :refer :all]))
 
 (def cljs-assets
-  [["src-cljs/<<sanitized>>/core.cljs" "cljs/src/cljs/core.cljs"]
-   ["env/dev/cljs/<<sanitized>>/dev.cljs" "cljs/env/dev/cljs/app.cljs"]
-   ["env/prod/cljs/<<sanitized>>/prod.cljs" "cljs/env/prod/cljs/app.cljs"]
-   ["resources/templates/home.html" "cljs/templates/home.html"]])
+  [["src-cljs/{{sanitized}}/core.cljs" "cljs/src/cljs/core.cljs"]
+   ["env/dev/cljs/{{sanitized}}/dev.cljs" "cljs/env/dev/cljs/app.cljs"]
+   ["env/prod/cljs/{{sanitized}}/prod.cljs" "cljs/env/prod/cljs/app.cljs"]
+   ["resources/templates/home.html" "cljs/templates/home.html"]
+   ["resources/templates/error.html" "core/resources/templates/error.html"]])
 
 (def cljs-dependencies
-  [['org.clojure/clojurescript "0.0-3308" :scope "provided"]
+  [['org.clojure/clojurescript "1.7.107" :scope "provided"]
    ['org.clojure/tools.reader "0.9.2"]
    ['reagent "0.5.0"]
    ['cljsjs/react "0.13.3-1"]
-   ['reagent-forms "0.5.4"]
+   ['reagent-forms "0.5.5"]
    ['reagent-utils "0.1.5"]
    ['secretary "1.2.3"]
    ['org.clojure/core.async "0.1.346.0-17112a-alpha"]
-   ['cljs-ajax "0.3.13"]])
+   ['cljs-ajax "0.3.14"]])
 
-(def clean-targets ["resources/public/js"])
+(def clean-targets [:target-path
+                    [:cljsbuild :builds :app :compiler :output-dir]
+                    [:cljsbuild :builds :app :compiler :output-to]])
 
 (def cljs-dev-dependencies
   [['lein-figwheel "0.3.7"]
@@ -62,6 +65,7 @@
          (append-options :plugins [['lein-cljsbuild "1.0.6"]])
          (append-options :dev-plugins [['lein-figwheel "0.3.7"]])
          (update-in [:clean-targets] (fnil into []) clean-targets)
+         (update-in [:gitignore] conj "resources/public/js")
          (assoc
            :cljs true
            :cljs-build (indent root-indent cljs-build)

@@ -9,15 +9,11 @@
     (some #{"+h2"} features) :h2))
 
 (defn db-dependencies [options]
-  [['migratus "0.8.2"]
-   ['org.clojure/java.jdbc "0.3.7"]
-   ['instaparse "1.4.1"]
-   ['yesql "0.5.0-rc3"]
-   ['clj-dbcp "0.8.1"]
-   ['to-jdbc-uri "0.2.0"]
+  [['migratus "0.8.3"]
+   ['conman "0.1.6"]
    ({:postgres ['org.postgresql/postgresql "9.3-1102-jdbc41"]
-     :mysql    ['mysql/mysql-connector-java "5.1.6"]
-     :h2       ['com.h2database/h2 "1.4.187"]}
+     :mysql    ['mysql/mysql-connector-java "5.1.34"]
+     :h2       ['com.h2database/h2 "1.4.188"]}
      (select-db options))])
 
 (defn db-url [{:keys [sanitized] :as options} suffix]
@@ -33,10 +29,10 @@
   (let [timestamp (.format
                     (java.text.SimpleDateFormat. "yyyyMMddHHmmss")
                     (java.util.Date.))]
-    [["src/<<sanitized>>/db/core.clj" "db/src/sql.db.clj"]
-     ["src/<<sanitized>>/db/migrations.clj" "db/src/migrations.clj"]
+    [["src/{{sanitized}}/db/core.clj" "db/src/sql.db.clj"]
+     ["src/{{sanitized}}/db/migrations.clj" "db/src/migrations.clj"]
      ["resources/sql/queries.sql" "db/sql/queries.sql"]
-     ["test/<<sanitized>>/test/db/core.clj" "db/test/db/core.clj"]
+     ["test/{{sanitized}}/test/db/core.clj" "db/test/db/core.clj"]
      [(str "resources/migrations/" timestamp "-add-users-table.up.sql") "db/migrations/add-users-table.up.sql"]
      [(str "resources/migrations/" timestamp "-add-users-table.down.sql") "db/migrations/add-users-table.down.sql"]]))
 
@@ -45,7 +41,7 @@
    :database-profile-test (str :database-url " \"" (db-url options "test") "\"")})
 
 (def mongo-files
-  [["src/<<sanitized>>/db/core.clj" "db/src/mongodb.clj"]])
+  [["src/{{sanitized}}/db/core.clj" "db/src/mongodb.clj"]])
 
 (defn add-mongo [[assets options]]
   [(into assets mongo-files)
@@ -59,7 +55,7 @@
   [(into assets (relational-db-files options))
    (-> options
        (append-options :dependencies (db-dependencies options))
-       (append-options :plugins [['migratus-lein "0.1.5"]])
+       (append-options :plugins [['migratus-lein "0.1.6"]])
        (update-in [:dev-dependencies] conj ['mvxcvi/puget "0.8.1"])
        (assoc
          :relational-db true

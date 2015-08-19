@@ -2,8 +2,7 @@
   (:require [leiningen.new.templates
              :refer [name-to-path year
                      sanitize sanitize-ns project-name]]
-            [leinjacker.utils :refer [lein-generation]]
-            [selmer.parser :as selmer]
+            [leiningen.core.main :refer [leiningen-version]]
             [leiningen.core.main :as main]
             [leiningen.new.common :refer :all]
             [leiningen.new.auth :refer [auth-features]]
@@ -28,12 +27,11 @@
    ["README.md" "core/README.md"]
 
    ;; core namespaces
-   ["src/<<sanitized>>/core.clj" "core/src/core.clj"]
-   ["src/<<sanitized>>/handler.clj" "core/src/handler.clj"]
-   ["src/<<sanitized>>/routes/home.clj" "core/src/home.clj"]
-   ["src/<<sanitized>>/layout.clj" "core/src/layout.clj"]
-   ["src/<<sanitized>>/middleware.clj" "core/src/middleware.clj"]
-   ["src/<<sanitized>>/session.clj" "core/src/session.clj"]
+   ["src/{{sanitized}}/core.clj" "core/src/core.clj"]
+   ["src/{{sanitized}}/handler.clj" "core/src/handler.clj"]
+   ["src/{{sanitized}}/routes/home.clj" "core/src/home.clj"]
+   ["src/{{sanitized}}/layout.clj" "core/src/layout.clj"]
+   ["src/{{sanitized}}/middleware.clj" "core/src/middleware.clj"]
 
    ;;HTML templates
    ["resources/templates/base.html" "core/resources/templates/base.html"]
@@ -64,22 +62,21 @@
   "Create a new Luminus project"
   [options]
   (main/info "Generating a Luminus project.")
-  (with-redefs [leiningen.new.templates/render-text render-template]
-    (let [[assets options]
-          (-> [core-assets options]
-              auth-features
-              db-features
-              cucumber-features
-              site-features
-              cljs-features
-              swagger-features
-              aleph-features
-              jetty-features
-              http-kit-features
-              immutant-features
-              sassc-features
-              war-features)]
-      (render-assets assets (format-options options)))))
+  (let [[assets options]
+        (-> [core-assets options]
+            auth-features
+            db-features
+            cucumber-features
+            site-features
+            cljs-features
+            swagger-features
+            aleph-features
+            jetty-features
+            http-kit-features
+            immutant-features
+            sassc-features
+            war-features)]
+    (render-assets (init-render) assets (format-options options))))
 
 (defn format-features [features]
   (apply str (interpose ", " features)))
@@ -92,10 +89,23 @@
     (update-in options [:features] conj "+immutant")
     options))
 
+(defn parse-version [v]
+  (map #(Integer/parseInt %)
+       (clojure.string/split v #"\.")))
+
+(defn version-before? [v]
+  (let [[x1 y1 z1] (parse-version (leiningen-version))
+        [x2 y2 z2] (parse-version v)]
+    (or
+      (< x1 x2)
+      (and (= x1 x2) (< y1 y2))
+      (and (and (= x1 x2) (= y1 y2) (< z1 z2))))))
+
 (defn luminus
   "Create a new Luminus project"
   [name & feature-params]
-  (let [supported-features #{;;databases
+  (let [min-version "2.5.2"
+        supported-features #{;;databases
                              "+h2" "+postgres" "+mysql" "+mongodb"
                              ;;servers
                              "+aleph" "+jetty" "+http-kit"
@@ -114,8 +124,9 @@
                         (clojure.set/difference supported-features)
                         (not-empty))]
     (cond
-      (< (lein-generation) 2)
-      (main/info "Leiningen version 2.x is required.")
+      (version-before? min-version)
+      (main/info "Leiningen version" min-version "or higher is required, found " (leiningen-version)
+                 "\nplease run: 'lein upgrade' to upgrade Leiningen")
 
       (re-matches #"\A\+.+" name)
       (main/info "Project name is missing.\nTry: lein new luminus PROJECT_NAME"

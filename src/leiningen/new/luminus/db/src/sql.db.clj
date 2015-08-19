@@ -2,16 +2,12 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [yesql.core :refer [defqueries]]
-    [taoensso.timbre :as timbre]
     [environ.core :refer [env]])
   (:import java.sql.BatchUpdateException)<% endifequal %><% ifequal db-type "postgres" %>
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [to-jdbc-uri.core :refer [to-jdbc-uri]]
-    [clj-dbcp.core :as dbcp]
-    [yesql.core :refer [defqueries]]
     [cheshire.core :refer [generate-string parse-string]]
-    [taoensso.timbre :as timbre]
+    [clojure.java.jdbc :as jdbc]
+    [conman.core :as conman]
     [environ.core :refer [env]])
   (:import org.postgresql.util.PGobject
            org.postgresql.jdbc4.Jdbc4Array
@@ -22,18 +18,24 @@
             Timestamp
             PreparedStatement])<% endifequal %><% ifequal db-type "mysql" %>
   (:require
-    [yesql.core :refer [defqueries]]
-    [clj-dbcp.core :as dbcp]
     [clojure.java.jdbc :as jdbc]
-    [to-jdbc-uri.core :refer [to-jdbc-uri]]
-    [taoensso.timbre :as timbre]
+    [conman.core :as conman]
     [environ.core :refer [env]])
   (:import [java.sql BatchUpdateException
-            PreparedStatement])<% endifequal %>)
+            PreparedStatement])<% endifequal %>)<% ifequal db-type "h2"%>
 
-(defonce conn (atom nil))
+(def conn
+  {:classname   "org.h2.Driver"
+   :connection-uri (:database-url env)
+   :make-pool?     true
+   :naming         {:keys   clojure.string/lower-case
+                    :fields clojure.string/upper-case}})
 
-(defqueries "sql/queries.sql")<% ifequal db-type "postgres" %>
+(defqueries "sql/queries.sql" {:connection conn})<% else %>
+
+(defonce ^:dynamic conn (atom nil))
+
+(conman/bind-connection conn "sql/queries.sql")<% ifequal db-type "postgres" %>
 
 (def pool-spec
   {:adapter    :postgresql
@@ -48,40 +50,17 @@
    :min-idle   1
    :max-idle   4
    :max-active 32})<% endifequal %>
- 
+
 (defn connect! []
-  (try
-    (reset!
-      conn<% ifequal db-type "h2" %>
-      {:classname   "org.h2.Driver"
-       :connection-uri (:database-url env)
-       :make-pool?     true
-       :naming         {:keys   clojure.string/lower-case
-                        :fields clojure.string/upper-case}}<% else %>
-      {:datasource
-       (dbcp/make-datasource
-         (assoc pool-spec
-           :jdbc-url (to-jdbc-uri (env :database-url))))}<% endifequal %>)
-    (catch Exception e
-      (timbre/error "Error occured while connecting to the database!" e))))
+  (conman/connect!
+   conn
+   (assoc
+     pool-spec
+     :jdbc-url (env :database-url))))
 
-(defn disconnect! []<% ifunequal db-type "h2" %>
-  (when-let [conn (:connection conn)]
-    (when-not (.isClosed conn)
-      (.close conn)))<% endifunequal %>)
+(defn disconnect! []
+  (conman/disconnect! conn))<% endifequal %><% ifequal db-type "mysql" %>
 
-(defn run
-  "executes a Yesql query using the given database connection and parameter map
-  the parameter map defaults to an empty map and the database conection defaults
-  to the conn atom"
-  ([query-fn] (run query-fn {}))
-  ([query-fn query-map] (run query-fn query-map @conn))
-  ([query-fn query-map db]
-   (try
-     (query-fn query-map {:connection db})
-     (catch BatchUpdateException e
-       (throw (or (.getNextException e) e))))))
-<% ifequal db-type "mysql" %>
 (defn to-date [sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))
 
@@ -97,6 +76,7 @@
   (set-parameter [v ^PreparedStatement stmt idx]
     (.setTimestamp stmt idx (java.sql.Timestamp. (.getTime v)))))
 <% endifequal %><% ifequal db-type "postgres" %>
+
 (defn to-date [sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))
 
